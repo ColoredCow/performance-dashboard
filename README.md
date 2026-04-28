@@ -234,7 +234,20 @@ Ensure you have run the script at least once so that data is available in BigQue
 | `TABLE_ID`            | Your BigQuery table ID                         |
 | `SERVICE_ACCOUNT_KEY` | Full contents of your `bigquery-writer-key.json` |
 
-3. The workflow in `.github/workflows/run-performance-tests.yaml` will run on the configured schedule automatically.
+3. Enable the cron schedule in `.github/workflows/run-performance-tests.yaml` by uncommenting the `schedule` block:
+
+```yaml
+on:
+  schedule:
+    # Runs twice daily — adjust cron times to match your preferred schedule (times are UTC)
+    - cron: "30 4 * * *"   # Example: 4:30 AM UTC
+    - cron: "30 14 * * *"  # Example: 2:30 PM UTC
+  workflow_dispatch:
+```
+
+> Adjust the cron times to match your preferred schedule (all times are UTC). Commit and push this change to activate the automated runs.
+
+4. The workflow will now run on the configured schedule automatically.
 
 **End-to-end flow:**
 

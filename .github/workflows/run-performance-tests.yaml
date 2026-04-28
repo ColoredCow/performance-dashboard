@@ -1,10 +1,10 @@
 name: Run Performance Tests
 
 on:
-  schedule:
-    # Runs twice daily — adjust cron times to match your preferred schedule (times are UTC)
-    - cron: "30 4 * * *"   # Example: 4:30 AM UTC
-    - cron: "30 14 * * *"  # Example: 2:30 PM UTC
+  # schedule:
+  #   # Runs twice daily — adjust cron times to match your preferred schedule (times are UTC)
+  #   - cron: "30 4 * * *"   # Example: 4:30 AM UTC
+  #   - cron: "30 14 * * *"  # Example: 2:30 PM UTC
   workflow_dispatch:
     inputs:
       target_env:
@@ -18,10 +18,6 @@ on:
 
 jobs:
   run-tests:
-    # For scheduled runs, requires the repo variable ENABLE_SCHEDULED_RUNS=true.
-    # This prevents the cron from firing in the template repo itself.
-    # Manual (workflow_dispatch) runs are always allowed.
-    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_SCHEDULED_RUNS == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
