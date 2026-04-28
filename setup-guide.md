@@ -1,6 +1,6 @@
 # Performance Dashboard Setup Guide
 
-> **A reusable template for setting up automated page health and database health monitoring with GTmetrix, Lighthouse, BigQuery, and Looker Studio.**
+> **A reusable template for setting up automated page health monitoring with GTmetrix, Lighthouse, BigQuery, and Looker Studio.**
 
 Clone this repository and follow the steps below to get a full performance monitoring pipeline running for your project.
 
@@ -10,9 +10,6 @@ Clone this repository and follow the steps below to get a full performance monit
 
 1. [BigQuery Project Setup](#1-bigquery-project-setup)
 2. [Page Health Performance Dashboard](#2-page-health-performance-dashboard)
-3. [Database Health Performance Dashboard](#3-database-health-performance-dashboard)
-4. [XAMPP Installation](#appendix-a-xampp-installation)
-5. [WordPress Installation](#appendix-b-wordpress-installation)
 
 ---
 
@@ -61,7 +58,7 @@ Clone this repository and follow the steps below to get a full performance monit
 
 #### Create Tables
 
-Select the dataset you just created, then click **"Create Table"** for each table below.
+Select the dataset you just created, then click **"Create Table"** for the table below.
 
 **GTmetrix / Page Health table** — paste the following JSON under **Schema**:
 
@@ -86,18 +83,7 @@ Select the dataset you just created, then click **"Create Table"** for each tabl
 ]
 ```
 
-**Database Health table** — paste the following JSON under **Schema**:
-
-```json
-[
-  { "name": "timestamp_utc", "type": "TIMESTAMP", "mode": "NULLABLE" },
-  { "name": "autoloaded_option_count", "type": "INTEGER", "mode": "NULLABLE" },
-  { "name": "autoloaded_option_size", "type": "INTEGER", "mode": "NULLABLE" },
-  { "name": "site_url", "type": "STRING", "mode": "NULLABLE" }
-]
-```
-
-Click **"Create table"** for each.
+Click **"Create table"**.
 
 ---
 
@@ -225,132 +211,3 @@ After confirming data is appearing in BigQuery:
 ```
 GitHub Actions (scheduled) → GTmetrix + Lighthouse → BigQuery → Looker Studio
 ```
-
----
-
-## 3. Database Health Performance Dashboard
-
-This section sets up the WordPress plugin that pushes database health metrics to BigQuery.
-
-### Prerequisites
-
-Ensure **XAMPP** and **WordPress** are installed.  
-See [Appendix A](#appendix-a-xampp-installation) and [Appendix B](#appendix-b-wordpress-installation) if needed.
-
----
-
-### Step 1: Clone the Plugin Repository
-
-Navigate to your WordPress plugins directory and clone the plugin:
-
-```bash
-cd C:\xampp\htdocs\<your-project>\wp-content\plugins\
-git clone https://github.com/ColoredCow/performance-adapter-wp.git
-cd performance-adapter-wp
-```
-
-### Step 2: Configure BigQuery Credentials
-
-Open the following file:
-
-```
-performance-adapter/includes/class-bigquery-client.php
-```
-
-Update the credentials array at **Lines 86–96** with your service account details from the [downloaded JSON key](#14-create-and-download-the-key):
-
-```php
-$this->credentials = array(
-  'type'                        => 'service_account',
-  'project_id'                  => 'YOUR_PROJECT_ID',
-  'private_key_id'              => 'YOUR_PRIVATE_KEY_ID',
-  'private_key'                 => "YOUR_PRIVATE_KEY",
-  'client_email'                => 'YOUR_SERVICE_ACCOUNT_EMAIL',
-  'client_id'                   => 'YOUR_CLIENT_ID',
-  'auth_uri'                    => 'https://accounts.google.com/o/oauth2/auth',
-  'token_uri'                   => 'https://oauth2.googleapis.com/token',
-  'auth_provider_x509_cert_url' => 'https://www.googleapis.com/oauth2/v1/certs',
-);
-```
-
-> **Important:** Use double quotes (`"`) for `private_key` so escape sequences are handled correctly.
-
-### Step 3: Package the Plugin
-
-Create a ZIP archive of the updated plugin folder.
-
-### Step 4: Install the Plugin in WordPress
-
-1. Visit `http://localhost/<your-project>/wp-admin/`
-2. Navigate to **Plugins** → **Add Plugin** → **Upload Plugin**
-3. Upload the ZIP and click **"Activate Plugin"**
-
-### Step 5: Configure the ProPerf Plugin
-
-1. In the WordPress Admin sidebar, find **ProPerf** → **Settings**
-2. Fill in all required fields
-3. Go to **ProPerf** → **Dashboard**
-
-### Step 6: Push Data to BigQuery
-
-Click the **"Push To BigQuery"** button on the ProPerf Dashboard.
-
----
-
-### Troubleshooting
-
-#### Vendor Error
-
-Run at the root of the plugin directory:
-
-```bash
-composer install --no-dev --optimize-autoloader
-```
-
-#### Upload Max Filesize Error
-
-In `C:\xampp\php\php.ini`, update:
-
-```ini
-post_max_size = 128M
-upload_max_filesize = 128M
-```
-
-#### SSL / Private Key Error
-
-Ensure `private_key` uses **double quotes** in the credentials array:
-
-```php
-// Incorrect
-'private_key' => 'YOUR_PRIVATE_KEY',
-
-// Correct
-'private_key' => "YOUR_PRIVATE_KEY",
-```
-
----
-
-## Appendix A: XAMPP Installation
-
-1. Visit [https://www.apachefriends.org](https://www.apachefriends.org) and download the latest XAMPP for Windows (PHP 7.4+)
-2. Run the installer → **Next** → **Next** → **Install** to the default path `C:\xampp`
-3. Open the **XAMPP Control Panel** and click **Start** next to **Apache** and **MySQL**
-4. Verify by visiting `http://localhost` in your browser
-
----
-
-## Appendix B: WordPress Installation
-
-1. Download WordPress from [https://wordpress.org/download/](https://wordpress.org/download/)
-2. Extract the ZIP to `C:\xampp\htdocs\` and rename the folder to your project name (e.g., `myproject`)
-3. Open `http://localhost/phpmyadmin`, click **New**, create a database (e.g., `myproject_db`), and click **Create**
-4. Visit `http://localhost/myproject` and complete the WordPress installation wizard using:
-
-| Field         | Value           |
-|---------------|-----------------|
-| Database Name | `myproject_db`  |
-| Username      | `root`          |
-| Password      | _(leave empty)_ |
-| Host          | `localhost`     |
-
----
