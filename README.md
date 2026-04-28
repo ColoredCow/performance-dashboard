@@ -16,6 +16,16 @@ Clone this repository and follow the steps below to get a full performance monit
 
 ## 1. BigQuery Project Setup
 
+> [!WARNING]
+> **BigQuery Sandbox Limitation: Mandatory 60-Day Expiration**
+>
+> If your Google Cloud project does **not** have a linked billing account, it operates in **Sandbox mode**. In this mode, Google Cloud enforces a **mandatory 60-day expiration** for all datasets and tables.
+>
+> *   **The Risk:** Your performance data will be automatically deleted after 60 days.
+> *   **The Restriction:** You cannot change the expiration to "Never" while in Sandbox mode.
+> *   **The Solution:** To ensure your data is preserved indefinitely, you must **link a billing account** to your project. This will allow you to set the dataset and table expiration to **"Never"**.
+
+
 ### 1.1 Create a Google Cloud Project
 
 1. Navigate to the [Google Cloud Console](https://console.cloud.google.com/)
@@ -144,13 +154,13 @@ SERVICE_ACCOUNT_KEY=./bigquery-writer-key.json
 
 ### Step 5: Update Target URLs
 
-Open [`config/urls.js`](config/urls.js) and replace the placeholder entries with the pages you want to monitor:
+Open [`config/urls.js`](config/urls.js) and update the list of URLs you want to monitor. You can categorize them as `live` or `uat` using the `env` property.
 
-```js
+```javascript
 export const URLS_TO_TEST = [
-  { label: "Home page",   url: "https://your-site.com/",     env: "live" },
-  { label: "About page",  url: "https://your-site.com/about/", env: "live" },
-  // Add as many entries as needed. Use env: "uat" for staging URLs.
+  { label: "Home Page", url: "https://your-site.com/", env: "live" },
+  { label: "UAT Home Page", url: "https://uat.your-site.com/", env: "uat" },
+  // ... add more URLs here
 ];
 ```
 
@@ -162,9 +172,44 @@ npm install
 
 ### Step 7: Run the Script Locally
 
-```bash
-node index.js
-```
+You can run the script for a specific environment by setting the `TARGET_ENV` environment variable. If not specified, it defaults to `live`.
+
+#### **For Mac / Linux Users:**
+Run these commands in your terminal:
+
+- **Test Live Environment:**
+  ```bash
+  TARGET_ENV=live node index.js
+  ```
+- **Test UAT Environment:**
+  ```bash
+  TARGET_ENV=uat node index.js
+  ```
+
+#### **For Windows Users:**
+
+**Option 1: Using Command Prompt (CMD)**
+- **Test Live Environment:**
+  ```cmd
+  set TARGET_ENV=live && node index.js
+  ```
+- **Test UAT Environment:**
+  ```cmd
+  set TARGET_ENV=uat && node index.js
+  ```
+
+**Option 2: Using PowerShell**
+- **Test Live Environment:**
+  ```powershell
+  $env:TARGET_ENV="live"; node index.js
+  ```
+- **Test UAT Environment:**
+  ```powershell
+  $env:TARGET_ENV="uat"; node index.js
+  ```
+
+> [!TIP]
+> Alternatively, you can add `TARGET_ENV=uat` or `TARGET_ENV=live` directly into your `.env` file to set a persistent default for your local machine.
 
 **What happens:**
 
