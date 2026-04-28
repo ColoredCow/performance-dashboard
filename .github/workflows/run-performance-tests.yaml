@@ -1,0 +1,71 @@
+name: Run Performance Tests
+
+on:
+  schedule:
+    # Runs twice daily — adjust cron times to match your preferred schedule (times are UTC)
+    - cron: "30 4 * * *"   # Example: 4:30 AM UTC
+    - cron: "30 14 * * *"  # Example: 2:30 PM UTC
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Environment to test'
+        required: true
+        default: 'live'
+        type: choice
+        options:
+          - live
+          - uat
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Setup Environment and Keys
+        run: |
+          mkdir -p tmp
+          echo '${{ secrets.SERVICE_ACCOUNT_KEY }}' > ./bigquery-writer-key.json
+
+      - name: Determine Target Environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "env=${{ github.event.inputs.target_env }}" >> $GITHUB_OUTPUT
+          else
+            # Alternate between live (Mon/Wed/Fri/Sun) and uat (Tue/Thu/Sat)
+            DAY=$(date +%u)
+            if [[ "$DAY" =~ ^(1|3|5|7)$ ]]; then
+              echo "env=live" >> $GITHUB_OUTPUT
+            else
+              echo "env=uat" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run GTMetrix & Lighthouse → BigQuery Ingestion
+        run: node index.js
+        env:
+          GT_API_KEY: ${{ secrets.GT_API_KEY }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          DATASET_ID: ${{ secrets.DATASET_ID }}
+          TABLE_ID: ${{ secrets.TABLE_ID }}
+          SERVICE_ACCOUNT_KEY: ./bigquery-writer-key.json
+          TARGET_ENV: ${{ steps.set-env.outputs.env }}
+          NODE_ENV: production

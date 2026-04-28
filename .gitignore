@@ -1,0 +1,18 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment / Secrets
+.env
+bigquery-writer-key.json
+
+# Temp & Artifacts
+*.json
+!package.json
+!package-lock.json
+!schema_gtmetrix_daily.json
+
+# Logs
+*.log
+logs/
