@@ -10,6 +10,7 @@ Clone this repository and follow the steps below to get a full performance monit
 
 1. [BigQuery Project Setup](#1-bigquery-project-setup)
 2. [Page Health Performance Dashboard](#2-page-health-performance-dashboard)
+3. [Visualize Performance Trends in Looker Studio](#3-visualize-performance-trends-in-looker-studio)
 
 ---
 
@@ -74,6 +75,7 @@ Select the dataset you just created, then click **"Create Table"** for the table
   { "name": "time_to_first_byte", "type": "FLOAT", "mode": "NULLABLE" },
   { "name": "cumulative_layout_shift", "type": "FLOAT", "mode": "NULLABLE" },
   { "name": "fully_loaded_time", "type": "FLOAT", "mode": "NULLABLE" },
+  { "name": "page_size", "type": "INTEGER", "mode": "NULLABLE" },
   { "name": "seo_score", "type": "FLOAT", "mode": "NULLABLE" },
   { "name": "accessibility_score", "type": "FLOAT", "mode": "NULLABLE" },
   { "name": "report_grade", "type": "STRING", "mode": "NULLABLE" },
@@ -170,26 +172,9 @@ node index.js
 - Local Lighthouse collects SEO and accessibility scores
 - All metrics are inserted into your BigQuery table
 
-### Step 8: Create the Looker Studio Dashboard
+### Step 8: Prepare for Visualization
 
-After confirming data is appearing in BigQuery:
-
-#### 8.1 Connect BigQuery to Looker Studio
-
-1. Open [Looker Studio](https://lookerstudio.google.com/)
-2. Create a new report
-3. Add a data source → Select **BigQuery**
-4. Choose your **Project**, **Dataset**, and **Table**
-
-#### 8.2 Build the Dashboard
-
-- Add **page-level filters** to isolate individual pages
-- Create **separate report pages** for multiple URLs
-- Add visualizations:
-  - **GTmetrix / Performance Score** — Scorecards
-  - **Fully Loaded Time** — Time Series charts
-  - **Historical trend analysis**
-  - **Comparison charts** across environments (`live` vs `uat`)
+Ensure you have run the script at least once so that data is available in BigQuery. You can then move to [Section 3](#3-visualize-performance-trends-in-looker-studio) to set up your Looker Studio dashboard.
 
 ### Step 9: Enable Automated Testing via GitHub Actions
 
@@ -211,3 +196,55 @@ After confirming data is appearing in BigQuery:
 ```
 GitHub Actions (scheduled) → GTmetrix + Lighthouse → BigQuery → Looker Studio
 ```
+
+---
+
+## 3. Visualize Performance Trends in Looker Studio
+
+Once your automated tests are running and populating BigQuery, you can build a professional dashboard in Looker Studio to monitor trends over time.
+
+### 3.1 Connect BigQuery to Looker Studio
+
+1. Open [Looker Studio](https://lookerstudio.google.com/).
+2. Create a **New Report**.
+3. Add a data source → Select **BigQuery**.
+4. Select your **Project**, **Dataset**, and **Table** created in Section 1.
+5. Click **Add**.
+
+### 3.2 Create Performance Charts
+
+To create a dashboard showing GTmetrix Score, Page Size, Load Time, and Accessibility trends:
+
+#### A. Set up the Dimension
+- **Chart Type**: Time Series Chart.
+- **Dimension**: `test_date` (Set type to **Date** or **Date & Time**).
+
+#### B. Create Calculated Fields (Recommended)
+In the Data pane, click **Add Field** to create user-friendly metrics:
+- **Page Size (MB)**: `page_size / 1048576`
+- **Fully Loaded Time (sec)**: `fully_loaded_time / 1000`
+
+#### C. Configure Metrics
+Drag the following into the **Metric** section of your charts:
+- `gtmetrix_score`
+- `fully_loaded_time` (or your calculated seconds field)
+- `page_size` (or your calculated MB field)
+- `accessibility_score`
+
+#### D. Add Filtering
+To isolate a specific page (e.g., "Product Details Page") and environment (e.g., "uat"):
+1. Add a **Filter** to the chart or the page.
+2. Set `page_name` Equal to `Product Details Page`.
+3. Set `env` Equal to `uat`.
+
+### 3.3 Add Target Reference Lines
+To track your performance against goals (e.g., a GTmetrix score of 80+):
+1. Select a chart and go to the **Style** tab.
+2. Click **Add a reference line**.
+3. Set the **Type** to `Constant Value`.
+4. Enter your target (e.g., `80` for score, `3` for seconds).
+5. Set the line style to **Dashed** and color to **Red**.
+6. Add a **Label** (e.g., "GTM (80)").
+
+---
+
