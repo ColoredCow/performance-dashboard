@@ -18,6 +18,10 @@ on:
 
 jobs:
   run-tests:
+    # For scheduled runs, requires the repo variable ENABLE_SCHEDULED_RUNS=true.
+    # This prevents the cron from firing in the template repo itself.
+    # Manual (workflow_dispatch) runs are always allowed.
+    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_SCHEDULED_RUNS == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
